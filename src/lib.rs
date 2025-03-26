@@ -3,8 +3,8 @@
 //! Bindings for the [Assimp](http://assimp.sourceforge.net) library.
 
 extern crate assimp_sys as ffi;
+#[cfg(feature = "cgmath")]
 extern crate cgmath;
-extern crate libc;
 
 pub use import::Importer;
 pub use log::LogStream;

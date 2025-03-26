@@ -1,3 +1,4 @@
+#[cfg(feature = "cgmath")]
 use cgmath::Matrix3;
 use ffi::AiMatrix3x3;
 
@@ -19,6 +20,7 @@ impl Matrix3x3 {
     }
 }
 
+#[cfg(feature = "cgmath")]
 impl From<Matrix3<f32>> for Matrix3x3 {
     fn from(mat: Matrix3<f32>) -> Matrix3x3 {
         Matrix3x3::new(mat[0][0], mat[1][0], mat[2][0],
@@ -27,10 +29,11 @@ impl From<Matrix3<f32>> for Matrix3x3 {
     }
 }
 
-impl Into<Matrix3<f32>> for Matrix3x3 {
-    fn into(self) -> Matrix3<f32> {
-        Matrix3::new(self.a1, self.b1, self.c1,
-                     self.a2, self.b2, self.c2,
-                     self.a3, self.b3, self.c3)
+#[cfg(feature = "cgmath")]
+impl From<Matrix3x3> for Matrix3<f32> {
+    fn from(mat: Matrix3x3) -> Matrix3<f32> {
+        Matrix3::new(mat.a1, mat.b1, mat.c1,
+                     mat.a2, mat.b2, mat.c2,
+                     mat.a3, mat.b3, mat.c3)
     }
 }

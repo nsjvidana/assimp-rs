@@ -1,8 +1,9 @@
+#![cfg(feature = "cgmath")]
 extern crate assimp;
 extern crate cgmath;
-extern crate libc;
+
 use assimp::math::*;
-use libc::c_float;
+use std::os::raw::c_float;
 
 #[test]
 fn test_matrix3_conversion() {

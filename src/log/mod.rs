@@ -2,6 +2,7 @@ use std::ffi::CString;
 use std::ptr;
 
 use ffi::*;
+use std::os::raw::{c_char, c_void};
 
 pub struct LogStream {
     raw: AiLogStream,
@@ -10,8 +11,8 @@ pub struct LogStream {
 
 impl LogStream {
     pub fn file(filename: &str) -> Option<LogStream> {
-        let cstr = CString::new(filename).unwrap().as_ptr();
-        let stream = unsafe { aiGetPredefinedLogStream(AiDefaultLogStream::File, cstr) };
+        let cstr = CString::new(filename).unwrap();
+        let stream = unsafe { aiGetPredefinedLogStream(AiDefaultLogStream::File, cstr.as_ptr()) };
         if stream.callback.is_some() {
             Some(LogStream { raw: stream, attached: false })
         } else {
@@ -33,6 +34,16 @@ impl LogStream {
     pub fn debug() -> LogStream {
         let stream = unsafe { aiGetPredefinedLogStream(AiDefaultLogStream::Debugger, ptr::null()) };
         LogStream { raw: stream, attached: false }
+    }
+
+    pub fn callback(cb: unsafe extern "system" fn(*const c_char, *mut c_char)) -> LogStream {
+        LogStream {
+            raw: AiLogStream {
+                callback: Some(cb),
+                user: ptr::null::<c_void>() as *mut c_void
+            },
+            attached: false
+        }
     }
 
     pub fn attached(&self) -> bool { self.attached }

@@ -1,3 +1,4 @@
+#[cfg(feature = "cgmath")]
 use cgmath::{Point3, Vector3};
 use ffi::AiVector3D;
 
@@ -21,32 +22,36 @@ impl From<[f32; 3]> for Vector3D {
     }
 }
 
-impl Into<[f32; 3]> for Vector3D {
-    fn into(self) -> [f32; 3] {
-        [self.x, self.y, self.z]
+impl From<Vector3D> for [f32; 3] {
+    fn from(v: Vector3D) -> [f32; 3] {
+        [v.x, v.y, v.z]
     }
 }
 
+#[cfg(feature = "cgmath")]
 impl From<Point3<f32>> for Vector3D {
     fn from(p: Point3<f32>) -> Vector3D {
         Vector3D::new(p[0], p[1], p[2])
     }
 }
 
-impl Into<Point3<f32>> for Vector3D {
-    fn into(self) -> Point3<f32> {
-        Point3::new(self.x, self.y, self.z)
+#[cfg(feature = "cgmath")]
+impl From<Vector3D> for Point3<f32> {
+    fn from(v: Vector3D) -> Point3<f32> {
+        Point3::new(v.x, v.y, v.z)
     }
 }
 
+#[cfg(feature = "cgmath")]
 impl From<Vector3<f32>> for Vector3D {
-    fn from(p: Vector3<f32>) -> Vector3D {
-        Vector3D::new(p[0], p[1], p[2])
+    fn from(v: Vector3<f32>) -> Vector3D {
+        Vector3D::new(v[0], v[1], v[2])
     }
 }
 
-impl Into<Vector3<f32>> for Vector3D {
-    fn into(self) -> Vector3<f32> {
-        Vector3::new(self.x, self.y, self.z)
+#[cfg(feature = "cgmath")]
+impl From<Vector3D> for Vector3<f32> {
+    fn from(v: Vector3D) -> Vector3<f32> {
+        Vector3::new(v.x, v.y, v.z)
     }
 }

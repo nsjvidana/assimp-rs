@@ -2,20 +2,17 @@ extern crate assimp;
 extern crate cgmath;
 #[macro_use]
 extern crate glium;
-extern crate glutin;
 
 use assimp::{Importer, LogStream};
-
-use cgmath::{perspective, Matrix4, deg, Vector3, Point3};
-use glutin::{Api, GlRequest};
-use glium::{DisplayBuild, Surface};
+use cgmath::{perspective, Matrix4, Deg, Vector3, Point3};
+use glium::{glutin, Surface};
+use glium::index::PrimitiveType;
 
 fn main() {
-    let display = glutin::WindowBuilder::new()
-        .with_depth_buffer(24)
-        .with_gl(GlRequest::Specific(Api::OpenGl, (3, 0)))
-        .build_glium()
-        .unwrap();
+    let mut events_loop = glutin::EventsLoop::new();
+    let window = glutin::WindowBuilder::new();
+    let context = glutin::ContextBuilder::new().with_depth_buffer(24);
+    let display = glium::Display::new(window, context, &events_loop).unwrap();
 
     #[derive(Copy, Clone, Debug)]
     struct Vertex3 {
@@ -84,8 +81,8 @@ fn main() {
             ).collect();
 
             // Create vertex buffer
-            let vb = glium::VertexBuffer::new(&display, verts);
-            vertex_buffers.push(vb);
+            let vb = glium::VertexBuffer::new(&display, &verts);
+            vertex_buffers.push(vb.unwrap());
 
             // Safe to assume all faces are triangles due to import options
             let mut indices = Vec::with_capacity(mesh.num_faces() as usize * 3);
@@ -95,8 +92,8 @@ fn main() {
                 indices.push(face[2]);
             }
 
-            let ib = glium::IndexBuffer::new(&display, glium::index::TrianglesList(indices));
-            index_buffers.push(ib);
+            let ib = glium::IndexBuffer::new(&display, PrimitiveType::TrianglesList, &indices);
+            index_buffers.push(ib.unwrap());
         }
     }
 
@@ -104,25 +101,24 @@ fn main() {
     let eye = Point3::new(0.0, 3.0, 3.0);
     let pos = Point3::new(0.0, 0.0, 0.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
-    let persp_matrix = cgmath::perspective(deg(60.0), 1.333, 0.1, 1000.0);
-    let view_matrix = Matrix4::look_at(&eye, &pos, &up);
+    let persp_matrix: [[f32; 4]; 4] = perspective(Deg(60.0), 1.333, 0.1, 1000.0).into();
+    let view_matrix: [[f32; 4]; 4] = Matrix4::look_at(eye, pos, up).into();;
 
     let uniforms = uniform! {
         persp_matrix: persp_matrix,
         view_matrix: view_matrix
     };
 
-    // Main loop
-    while !display.is_closed() {
-        // "process" all events
-        for _ in display.poll_events() { }
-
+    let draw = || {
         let mut target = display.draw();
         target.clear_color_and_depth((0.1, 0.1, 0.1, 1.0), 1.0);
 
         let params = glium::DrawParameters {
-            depth_test: glium::DepthTest::IfLess,
-            depth_write: true,
+            depth: glium::Depth {
+                test: glium::DepthTest::IfLess,
+                write: true,
+                ..Default::default()
+            },
             ..Default::default()
         };
 
@@ -134,6 +130,21 @@ fn main() {
                         &params).unwrap();
         }
 
-        target.finish();
-    }
+        target.finish().unwrap();
+    };
+
+    draw();
+
+    // Main loop
+    events_loop.run_forever(|event| {
+        match event {
+            glutin::Event::WindowEvent { event, .. } => match event {
+                glutin::WindowEvent::Closed => return glutin::ControlFlow::Break,
+                glutin::WindowEvent::Resized(..) => draw(),
+                _ => (),
+            },
+            _ => (),
+        }
+        glutin::ControlFlow::Continue
+    });
 }
